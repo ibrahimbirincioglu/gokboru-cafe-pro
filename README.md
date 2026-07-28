@@ -3,7 +3,7 @@
 Gökbörü Cafe için Next.js, TypeScript, Prisma ve PostgreSQL tabanlı web ve
 işletme yönetim sistemi.
 
-Bu branch yalnızca başlangıç iskeletini içerir:
+Proje şu anda başlangıç iskeleti ve Aşama 1 temel veri modelini içerir:
 
 - Next.js App Router ve TypeScript
 - Prisma/PostgreSQL bağlantı tanımı
@@ -11,6 +11,11 @@ Bu branch yalnızca başlangıç iskeletini içerir:
 - İşlevsiz ve açıkça etiketlenmiş admin giriş iskeleti
 - Tekrarlanabilir biçimde 20 başlangıç masası oluşturan seed
 - Lint, type-check, test ve production build komutları
+
+Temel veri modeli ayrıca kullanıcı rolleri, kategori, ürün, masa oturumu,
+sipariş, sipariş kalemi snapshot'ları, durum geçmişi, ödeme, servis talebi,
+audit log ve uygulama ayarlarını içerir. Para sütunları PostgreSQL
+`DECIMAL(12,2)` olarak saklanır.
 
 Sipariş, ödeme, QR, gerçek kimlik doğrulama ve WebSocket özellikleri henüz
 uygulanmamıştır.
@@ -66,6 +71,10 @@ npm run typecheck
 npm test
 npm run build
 ```
+
+Migration entegrasyon testi, SQL dosyalarını bellek içi PostgreSQL üzerinde
+uygular; mevcut masa verisinin korunduğunu, bir masada yalnızca tek aktif
+oturum açılabildiğini ve audit log kayıtlarının değiştirilemediğini doğrular.
 
 ## Güvenlik notları
 

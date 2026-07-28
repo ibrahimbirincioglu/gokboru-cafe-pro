@@ -6,14 +6,320 @@ datasource db {
   provider = "postgresql"
 }
 
-model Table {
-  id          String   @id @default(cuid())
-  number      Int      @unique
+enum UserRole {
+  OWNER
+  ADMIN
+  CASHIER
+  KITCHEN
+  WAITER
+}
+
+enum PrepStation {
+  BAR
+  MUTFAK
+  NARGILE
+}
+
+enum TableSessionStatus {
+  OPEN
+  PAYMENT_REQUESTED
+  PAYMENT_PROCESSING
+  CLOSED
+  CANCELLED
+}
+
+enum OrderStatus {
+  BEKLIYOR
+  ONAYLANDI
+  HAZIRLANIYOR
+  HAZIR
+  TAMAMLANDI
+  IPTAL
+}
+
+enum OrderItemStatus {
+  BEKLIYOR
+  ONAYLANDI
+  HAZIRLANIYOR
+  HAZIR
+  SERVIS_EDILDI
+  IPTAL
+}
+
+enum OrderSource {
+  QR
+  CASHIER
+  WAITER
+}
+
+enum PaymentType {
+  NAKIT
+  KREDI_KARTI
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+  VOIDED
+}
+
+enum ServiceRequestType {
+  GARSON
+  HESAP
+  KOZ
+  TEMIZLIK
+  DIGER
+}
+
+enum ServiceRequestStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+  CANCELLED
+}
+
+model User {
+  id                     String               @id @default(cuid())
+  name                   String
+  username               String               @unique
+  email                  String?              @unique
+  passwordHash           String
+  role                   UserRole
+  isActive               Boolean              @default(true)
+  lastLoginAt            DateTime?
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+  openedTableSessions    TableSession[]       @relation("TableSessionOpenedBy")
+  closedTableSessions    TableSession[]       @relation("TableSessionClosedBy")
+  createdOrders          Order[]              @relation("OrderCreatedBy")
+  receivedPayments       Payment[]            @relation("PaymentReceivedBy")
+  orderStatusChanges     OrderStatusHistory[]
+  handledServiceRequests ServiceRequest[]
+  auditLogs              AuditLog[]
+  updatedSettings        AppSetting[]
+
+  @@index([role, isActive])
+}
+
+model Category {
+  id          String    @id @default(cuid())
   name        String
-  isActive    Boolean  @default(true)
-  sortOrder   Int
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  slug        String    @unique
+  description String?
+  imageUrl    String?
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
 
   @@index([isActive, sortOrder])
+}
+
+model Product {
+  id            String      @id @default(cuid())
+  categoryId    String
+  name          String
+  slug          String      @unique
+  description   String?
+  imageUrl      String?
+  price         Decimal     @db.Decimal(12, 2)
+  discountPrice Decimal?    @db.Decimal(12, 2)
+  prepStation   PrepStation
+  isActive      Boolean     @default(true)
+  isAvailable   Boolean     @default(true)
+  isFeatured    Boolean     @default(false)
+  allowNote     Boolean     @default(true)
+  sortOrder     Int         @default(0)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  category      Category    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  orderItems    OrderItem[]
+
+  @@index([categoryId, isActive, isAvailable, sortOrder])
+  @@index([isFeatured, isActive])
+}
+
+model Table {
+  id            String         @id @default(cuid())
+  number        Int            @unique
+  name          String
+  isActive      Boolean        @default(true)
+  sortOrder     Int
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  tableSessions TableSession[]
+  orders        Order[]
+
+  @@index([isActive, sortOrder])
+}
+
+model TableSession {
+  id                 String             @id @default(cuid())
+  tableId            String
+  status             TableSessionStatus @default(OPEN)
+  openedAt           DateTime           @default(now())
+  paymentRequestedAt DateTime?
+  closedAt           DateTime?
+  openedByUserId     String?
+  closedByUserId     String?
+  guestCount         Int?
+  note               String?
+  businessDate       DateTime           @db.Date
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  table              Table              @relation(fields: [tableId], references: [id], onDelete: Restrict)
+  openedBy           User?              @relation("TableSessionOpenedBy", fields: [openedByUserId], references: [id], onDelete: SetNull)
+  closedBy           User?              @relation("TableSessionClosedBy", fields: [closedByUserId], references: [id], onDelete: SetNull)
+  orders             Order[]
+  payments           Payment[]
+  serviceRequests    ServiceRequest[]
+
+  @@index([tableId, status])
+  @@index([businessDate, status])
+  @@index([openedAt])
+}
+
+model Order {
+  id              String               @id @default(cuid())
+  orderNumber     String               @unique
+  tableSessionId  String
+  tableId         String
+  createdByUserId String?
+  status          OrderStatus          @default(BEKLIYOR)
+  source          OrderSource
+  subtotal        Decimal              @db.Decimal(12, 2)
+  discountTotal   Decimal              @default(0) @db.Decimal(12, 2)
+  cancelledTotal  Decimal              @default(0) @db.Decimal(12, 2)
+  total           Decimal              @db.Decimal(12, 2)
+  customerNote    String?
+  acceptedAt      DateTime?
+  preparingAt     DateTime?
+  readyAt         DateTime?
+  completedAt     DateTime?
+  cancelledAt     DateTime?
+  cancelReason    String?
+  version         Int                  @default(1)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  tableSession    TableSession         @relation(fields: [tableSessionId], references: [id], onDelete: Restrict)
+  table           Table                @relation(fields: [tableId], references: [id], onDelete: Restrict)
+  createdBy       User?                @relation("OrderCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  items           OrderItem[]
+  statusHistory   OrderStatusHistory[]
+
+  @@index([tableSessionId, status])
+  @@index([tableId, createdAt])
+  @@index([status, createdAt])
+}
+
+model OrderItem {
+  id                  String          @id @default(cuid())
+  orderId             String
+  productId           String?
+  productNameSnapshot String
+  unitPriceSnapshot   Decimal         @db.Decimal(12, 2)
+  quantity            Int
+  lineSubtotal        Decimal         @db.Decimal(12, 2)
+  note                String?
+  status              OrderItemStatus @default(BEKLIYOR)
+  prepStation         PrepStation
+  cancelledQuantity   Int             @default(0)
+  cancelReason        String?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  order               Order           @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  product             Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([orderId, status])
+  @@index([productId])
+  @@index([prepStation, status])
+}
+
+model OrderStatusHistory {
+  id              String       @id @default(cuid())
+  orderId         String
+  fromStatus      OrderStatus?
+  toStatus        OrderStatus
+  changedByUserId String?
+  source          OrderSource
+  note            String?
+  createdAt       DateTime     @default(now())
+  order           Order        @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  changedBy       User?        @relation(fields: [changedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([orderId, createdAt])
+  @@index([changedByUserId, createdAt])
+}
+
+model Payment {
+  id               String        @id @default(cuid())
+  paymentNumber    String        @unique
+  tableSessionId   String
+  amount           Decimal       @db.Decimal(12, 2)
+  paymentType      PaymentType
+  status           PaymentStatus @default(PENDING)
+  idempotencyKey   String        @unique
+  receivedByUserId String
+  businessDate     DateTime      @db.Date
+  paidAt           DateTime?
+  refundedAmount   Decimal       @default(0) @db.Decimal(12, 2)
+  note             String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  tableSession     TableSession  @relation(fields: [tableSessionId], references: [id], onDelete: Restrict)
+  receivedBy       User          @relation("PaymentReceivedBy", fields: [receivedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([tableSessionId, status])
+  @@index([businessDate, status])
+  @@index([paymentType, paidAt])
+}
+
+model ServiceRequest {
+  id              String               @id @default(cuid())
+  tableSessionId  String
+  type            ServiceRequestType
+  status          ServiceRequestStatus @default(OPEN)
+  message         String?
+  createdAt       DateTime             @default(now())
+  acknowledgedAt  DateTime?
+  resolvedAt      DateTime?
+  handledByUserId String?
+  tableSession    TableSession         @relation(fields: [tableSessionId], references: [id], onDelete: Restrict)
+  handledBy       User?                @relation(fields: [handledByUserId], references: [id], onDelete: SetNull)
+
+  @@index([tableSessionId, status])
+  @@index([status, createdAt])
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  actorUserId  String?
+  action       String
+  entityType   String
+  entityId     String?
+  beforeJson   Json?
+  afterJson    Json?
+  safeMetadata Json?
+  ipHash       String?
+  createdAt    DateTime @default(now())
+  actor        User?    @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId, createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([action, createdAt])
+}
+
+model AppSetting {
+  id              String   @id @default(cuid())
+  key             String   @unique
+  valueJson       Json
+  updatedAt       DateTime @updatedAt
+  updatedByUserId String?
+  updatedBy       User?    @relation(fields: [updatedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([updatedByUserId])
 }

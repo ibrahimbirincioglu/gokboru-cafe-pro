@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildInitialTables } from "../prisma/seed-data";
+import { buildInitialSettings, buildInitialTables } from "../prisma/seed-data";
 
 describe("buildInitialTables", () => {
   it("creates 20 ordered, active and uniquely numbered tables", () => {
@@ -19,5 +19,20 @@ describe("buildInitialTables", () => {
       isActive: true,
     });
     expect(new Set(tables.map((table) => table.number)).size).toBe(20);
+  });
+});
+
+describe("buildInitialSettings", () => {
+  it("uses the required Istanbul timezone and Turkish Lira defaults", () => {
+    const settings = Object.fromEntries(
+      buildInitialSettings().map((setting) => [
+        setting.key,
+        setting.valueJson,
+      ]),
+    );
+
+    expect(settings.businessTimezone).toBe("Europe/Istanbul");
+    expect(settings.businessDayCutoff).toBe("00:00");
+    expect(settings.currency).toBe("TRY");
   });
 });
