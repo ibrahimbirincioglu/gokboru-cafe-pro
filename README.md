@@ -95,6 +95,18 @@ yazılır. Fotoğraflar bu aşamada yalnızca doğrulanmış HTTPS URL olarak ka
 edilir. Dosya yükleme ve object storage altyapısı bu aşamanın kapsamı
 dışındadır.
 
+## Masa ve QR yönetimi
+
+`/admin/tables` yalnızca `TABLES_MANAGE` sunucu iznine sahip OWNER ve ADMIN
+rollerine açıktır. Masa ekleme, düzenleme, pasife alma, QR yenileme, tekil
+PNG/SVG indirme ve tüm masaları yazdırma/PDF kaydetme desteklenir.
+
+20 başlangıç masası korunur. İdempotent seed eksik QR kayıtlarını tamamlar.
+Tokenlar 256-bit rastgele üretilir; veritabanında doğrulama hash'i ve
+`QR_TOKEN_SECRET` ile AES-GCM şifreli kopyası saklanır. QR yenilendiğinde eski
+hash değiştiği için eski bağlantı hemen geçersiz olur. Ham token audit log'a
+yazılmaz.
+
 ## Doğrulama
 
 ```bash

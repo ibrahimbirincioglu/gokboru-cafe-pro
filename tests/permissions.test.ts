@@ -38,6 +38,9 @@ describe("role permission matrix", () => {
     expect(
       hasPermission(UserRole.CASHIER, PERMISSIONS.MENU_MANAGE),
     ).toBe(false);
+    expect(
+      hasPermission(UserRole.CASHIER, PERMISSIONS.TABLES_MANAGE),
+    ).toBe(false);
   });
 
   it("keeps WAITER out of admin, POS and reports", () => {
@@ -55,6 +58,9 @@ describe("role permission matrix", () => {
     ).toBe(false);
     expect(
       hasPermission(UserRole.WAITER, PERMISSIONS.MENU_MANAGE),
+    ).toBe(false);
+    expect(
+      hasPermission(UserRole.WAITER, PERMISSIONS.TABLES_MANAGE),
     ).toBe(false);
   });
 
