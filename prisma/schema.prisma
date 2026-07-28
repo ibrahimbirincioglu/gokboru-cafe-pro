@@ -100,8 +100,39 @@ model User {
   handledServiceRequests ServiceRequest[]
   auditLogs              AuditLog[]
   updatedSettings        AppSetting[]
+  sessions               UserSession[]
 
   @@index([role, isActive])
+}
+
+model UserSession {
+  id            String    @id @default(cuid())
+  userId        String
+  tokenHash     String    @unique
+  ipHash        String?
+  userAgentHash String?
+  expiresAt     DateTime
+  idleExpiresAt DateTime
+  lastSeenAt    DateTime  @default(now())
+  revokedAt     DateTime?
+  createdAt     DateTime  @default(now())
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt, expiresAt])
+  @@index([idleExpiresAt])
+}
+
+model LoginAttempt {
+  id              String    @id @default(cuid())
+  identifierHash  String
+  ipHash          String
+  failureCount    Int       @default(0)
+  windowStartedAt DateTime
+  blockedUntil    DateTime?
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([identifierHash, ipHash])
+  @@index([blockedUntil])
 }
 
 model Category {

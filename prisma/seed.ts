@@ -1,6 +1,10 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
-import { buildInitialSettings, buildInitialTables } from "./seed-data";
+import {
+  buildDevelopmentUsers,
+  buildInitialSettings,
+  buildInitialTables,
+} from "./seed-data";
 
 async function main() {
   const connectionString = process.env.DATABASE_URL;
@@ -33,7 +37,24 @@ async function main() {
       });
     }
 
-    console.info("20 başlangıç masası ve varsayılan ayarlar hazır.");
+    const developmentPasswordHash = process.env.DEV_SEED_PASSWORD_HASH;
+
+    if (
+      process.env.NODE_ENV !== "production" &&
+      developmentPasswordHash
+    ) {
+      for (const user of buildDevelopmentUsers(
+        developmentPasswordHash,
+      )) {
+        await prisma.user.upsert({
+          where: { username: user.username },
+          update: {},
+          create: user,
+        });
+      }
+    }
+
+    console.info("Başlangıç masaları, ayarlar ve izin verilen geliştirme kullanıcıları hazır.");
   } finally {
     await prisma.$disconnect();
   }

@@ -21,3 +21,37 @@ export function buildInitialSettings() {
     { key: "serviceChargeEnabled", valueJson: false },
   ];
 }
+
+export function buildDevelopmentUsers(passwordHash: string) {
+  if (!passwordHash.startsWith("$argon2id$")) {
+    throw new Error("DEV_SEED_PASSWORD_HASH geçerli bir Argon2id hash olmalıdır.");
+  }
+
+  return [
+    {
+      name: "Development Owner",
+      username: "owner",
+      role: UserRole.OWNER,
+      passwordHash,
+    },
+    {
+      name: "Development Admin",
+      username: "admin",
+      role: UserRole.ADMIN,
+      passwordHash,
+    },
+    {
+      name: "Development Cashier",
+      username: "cashier",
+      role: UserRole.CASHIER,
+      passwordHash,
+    },
+    {
+      name: "Development Waiter",
+      username: "waiter",
+      role: UserRole.WAITER,
+      passwordHash,
+    },
+  ];
+}
+import { UserRole } from "@prisma/client";

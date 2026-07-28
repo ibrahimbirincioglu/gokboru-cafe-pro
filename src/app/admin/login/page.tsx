@@ -1,11 +1,31 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { loginAction } from "./actions";
+import { redirectAuthenticatedUser } from "@/lib/auth/server";
 
 export const metadata: Metadata = {
   title: "Admin Girişi",
 };
 
-export default function AdminLoginPage() {
+type LoginPageProps = {
+  searchParams: Promise<{
+    error?: string;
+    next?: string;
+  }>;
+};
+
+export default async function AdminLoginPage({
+  searchParams,
+}: LoginPageProps) {
+  await redirectAuthenticatedUser();
+  const params = await searchParams;
+  const errorMessage =
+    params.error === "rate-limited"
+      ? "Çok fazla giriş denemesi yapıldı. Lütfen 15 dakika sonra tekrar deneyin."
+      : params.error
+        ? "Kullanıcı adı veya parola hatalı."
+        : null;
+
   return (
     <main className="page-shell">
       <section className="login-card" aria-labelledby="login-title">
@@ -15,30 +35,40 @@ export default function AdminLoginPage() {
         <p className="eyebrow">Yönetim paneli</p>
         <h1 id="login-title">Admin girişi</h1>
         <p className="muted">
-          Kimlik doğrulama sonraki aşamada güvenli sunucu oturumuyla
-          tamamlanacaktır.
+          OWNER, ADMIN, CASHIER ve WAITER hesapları güvenli çalışma
+          alanlarına buradan giriş yapabilir.
         </p>
-        <form className="login-form">
+        {errorMessage ? (
+          <p aria-live="polite" className="form-error" role="alert">
+            {errorMessage}
+          </p>
+        ) : null}
+        <form action={loginAction} className="login-form">
+          {params.next ? (
+            <input name="next" type="hidden" value={params.next} />
+          ) : null}
           <label htmlFor="username">Kullanıcı adı</label>
           <input
             autoComplete="username"
-            disabled
             id="username"
             name="username"
-            placeholder="Henüz etkin değil"
+            maxLength={64}
+            minLength={3}
+            required
             type="text"
           />
           <label htmlFor="password">Parola</label>
           <input
             autoComplete="current-password"
-            disabled
             id="password"
             name="password"
-            placeholder="Henüz etkin değil"
+            maxLength={200}
+            minLength={8}
+            required
             type="password"
           />
-          <button disabled type="button">
-            Giriş altyapısı hazırlanıyor
+          <button type="submit">
+            Güvenli giriş
           </button>
         </form>
       </section>

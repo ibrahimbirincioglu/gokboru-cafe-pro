@@ -105,3 +105,60 @@ describe("phase 1 PostgreSQL migration", () => {
     }
   });
 });
+
+describe("phase 2 PostgreSQL migration", () => {
+  it("adds persistent sessions and login throttling without data loss", async () => {
+    const database = new PGlite();
+
+    try {
+      await database.exec(readMigration("20260728154000_init"));
+      await database.exec(
+        readMigration("20260728161000_phase_1_data_model"),
+      );
+      await database.query(
+        `INSERT INTO "User"
+          ("id", "name", "username", "passwordHash", "role", "updatedAt")
+         VALUES
+          ('existing-user', 'Mevcut Admin', 'admin', 'hash', 'ADMIN', CURRENT_TIMESTAMP)`,
+      );
+
+      await database.exec(
+        readMigration("20260728174500_phase_2_auth_authorization"),
+      );
+
+      const users = await database.query<{ id: string }>(
+        `SELECT "id" FROM "User"`,
+      );
+      expect(users.rows).toEqual([{ id: "existing-user" }]);
+
+      await database.query(
+        `INSERT INTO "UserSession"
+          ("id", "userId", "tokenHash", "expiresAt", "idleExpiresAt")
+         VALUES
+          ('session-1', 'existing-user', 'token-hash', CURRENT_TIMESTAMP + INTERVAL '8 hours', CURRENT_TIMESTAMP + INTERVAL '30 minutes')`,
+      );
+
+      await expect(
+        database.query(
+          `INSERT INTO "UserSession"
+            ("id", "userId", "tokenHash", "expiresAt", "idleExpiresAt")
+           VALUES
+            ('session-2', 'existing-user', 'token-hash', CURRENT_TIMESTAMP + INTERVAL '8 hours', CURRENT_TIMESTAMP + INTERVAL '30 minutes')`,
+        ),
+      ).rejects.toThrow(/UserSession_tokenHash_key/);
+
+      const authTables = await database.query<{ table_name: string }>(
+        `SELECT table_name
+         FROM information_schema.tables
+         WHERE table_schema = 'public'
+           AND table_name IN ('UserSession', 'LoginAttempt')`,
+      );
+      expect(authTables.rows.map((row) => row.table_name).sort()).toEqual([
+        "LoginAttempt",
+        "UserSession",
+      ]);
+    } finally {
+      await database.close();
+    }
+  });
+});
