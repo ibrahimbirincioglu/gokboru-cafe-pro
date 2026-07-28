@@ -174,6 +174,21 @@ döner; veritabanında token hash'i ve şifreli kopyası saklanır.
 - Aynı filtrelerle UTF-8 CSV dışa aktarımı yapılır; hücreler CSV ve spreadsheet
   formula injection'a karşı güvenli hale getirilir.
 
+## Halka açık Gökbörü Cafe sitesi
+
+- `/` modern, mobil uyumlu tanıtım sitesi; hero görsel/video, menü önizlemesi,
+  okey, nargile, hamburger, gözleme, galeri, çalışma saatleri, harita ve iletişim
+  alanlarını içerir.
+- `/admin/site` yalnızca `SITE_MANAGE` yetkili OWNER/ADMIN kullanıcıları için
+  içerik, gerçek medya HTTPS URL’leri, iletişim, kampanya ve SEO yönetimi sunar.
+  Güncellemeler tek transaction içinde AppSetting ve append-only audit log’a
+  yazılır.
+- Open Graph/Twitter metadata, canonical URL, sitemap, robots ve
+  `CafeOrCoffeeShop` LocalBusiness JSON-LD bulunur.
+- Medya yoksa sahte fotoğraf kullanılmaz; hafif tasarım fallback’i gösterilir.
+  Galeri görselleri ve harita lazy-load edilir; klavye odağı, skip link,
+  semantik landmark ve reduced-motion desteği vardır.
+
 ## Doğrulama
 
 ```bash
