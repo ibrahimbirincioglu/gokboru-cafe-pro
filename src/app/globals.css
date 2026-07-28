@@ -180,6 +180,111 @@ h1 {
   cursor: pointer;
 }
 
+.button-danger {
+  border: 1px solid #9b4747;
+  color: #ffd9d9;
+  background: rgb(117 27 27 / 35%);
+  cursor: pointer;
+}
+
+.admin-shell {
+  min-height: 100vh;
+  padding: clamp(1rem, 4vw, 3rem);
+}
+
+.admin-header,
+.management-title,
+.management-actions,
+.management-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-header {
+  max-width: 90rem;
+  margin: 0 auto 2rem;
+}
+
+.admin-header h1 {
+  max-width: none;
+  font-size: clamp(2.2rem, 5vw, 4rem);
+}
+
+.management-card {
+  max-width: 90rem;
+  margin: 0 auto 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: clamp(1rem, 3vw, 2rem);
+  background: rgb(16 29 45 / 88%);
+}
+
+.management-card h2,
+.management-card h3 {
+  margin-top: 0;
+}
+
+.catalog-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.catalog-form label {
+  display: grid;
+  gap: 0.4rem;
+  color: var(--muted);
+}
+
+.catalog-form input,
+.catalog-form textarea,
+.catalog-form select {
+  width: 100%;
+  min-height: 2.8rem;
+  border: 1px solid var(--border);
+  border-radius: 0.65rem;
+  padding: 0.65rem 0.75rem;
+  color: var(--text);
+  background: var(--surface-soft);
+}
+
+.catalog-form textarea {
+  min-height: 6rem;
+  resize: vertical;
+}
+
+.catalog-form .checkbox-field {
+  display: flex;
+  align-items: center;
+  align-self: end;
+  gap: 0.6rem;
+  min-height: 2.8rem;
+}
+
+.catalog-form .checkbox-field input {
+  width: 1.1rem;
+  min-height: auto;
+}
+
+.full-field {
+  grid-column: 1 / -1;
+}
+
+.management-actions {
+  justify-content: flex-start;
+  margin-top: 1rem;
+}
+
+.option-row {
+  margin-bottom: 1rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
 @media (max-width: 520px) {
   .page-shell {
     padding: 1rem;

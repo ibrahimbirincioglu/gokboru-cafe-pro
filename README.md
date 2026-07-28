@@ -84,6 +84,17 @@ tanımlayıcılarla 15 dakikalık pencerede sınırlandırılır.
 Reverse proxy, istemcinin dışarıdan gönderdiği `X-Forwarded-For` başlığını
 temizleyip güvenilir istemci IP'siyle yeniden yazmalıdır.
 
+## Menü yönetimi
+
+`/admin/menu` yalnızca `MENU_MANAGE` sunucu iznine sahip OWNER ve ADMIN
+rollerine açıktır. Kategori, ürün, fiyat, açıklama, sıralama, fotoğraf URL'si,
+tükenmiş durumu ve ürün seçenekleri yönetilebilir.
+
+Kayıtlar hard-delete edilmez; pasife alınır ve değişiklikler audit log'a
+yazılır. Fotoğraflar bu aşamada yalnızca doğrulanmış HTTPS URL olarak kabul
+edilir. Dosya yükleme ve object storage altyapısı bu aşamanın kapsamı
+dışındadır.
+
 ## Doğrulama
 
 ```bash

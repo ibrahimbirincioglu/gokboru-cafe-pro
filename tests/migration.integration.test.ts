@@ -162,3 +162,78 @@ describe("phase 2 PostgreSQL migration", () => {
     }
   });
 });
+
+describe("phase 3 PostgreSQL migration", () => {
+  it("adds product options without changing existing catalog data", async () => {
+    const database = new PGlite();
+
+    try {
+      await database.exec(readMigration("20260728154000_init"));
+      await database.exec(
+        readMigration("20260728161000_phase_1_data_model"),
+      );
+      await database.exec(
+        readMigration("20260728174500_phase_2_auth_authorization"),
+      );
+      await database.query(
+        `INSERT INTO "Category"
+          ("id", "name", "slug", "updatedAt")
+         VALUES
+          ('category-1', 'Burger', 'burger', CURRENT_TIMESTAMP)`,
+      );
+      await database.query(
+        `INSERT INTO "Product"
+          ("id", "categoryId", "name", "slug", "price", "prepStation", "updatedAt")
+         VALUES
+          ('product-1', 'category-1', 'Gökbörü Burger', 'gokboru-burger', 250.90, 'MUTFAK', CURRENT_TIMESTAMP)`,
+      );
+
+      await database.exec(
+        readMigration("20260728183500_phase_3_menu_management"),
+      );
+
+      const products = await database.query<{
+        id: string;
+        price: string;
+      }>(`SELECT "id", "price"::text AS "price" FROM "Product"`);
+      expect(products.rows).toEqual([
+        { id: "product-1", price: "250.90" },
+      ]);
+
+      await database.query(
+        `INSERT INTO "ProductOptionGroup"
+          ("id", "productId", "name", "minSelect", "maxSelect", "updatedAt")
+         VALUES
+          ('group-1', 'product-1', 'Ekstralar', 0, 2, CURRENT_TIMESTAMP)`,
+      );
+      await database.query(
+        `INSERT INTO "ProductOption"
+          ("id", "groupId", "name", "priceDelta", "updatedAt")
+         VALUES
+          ('option-1', 'group-1', 'Ekstra peynir', 25.50, CURRENT_TIMESTAMP)`,
+      );
+
+      const options = await database.query<{
+        name: string;
+        priceDelta: string;
+      }>(
+        `SELECT "name", "priceDelta"::text AS "priceDelta"
+         FROM "ProductOption"`,
+      );
+      expect(options.rows).toEqual([
+        { name: "Ekstra peynir", priceDelta: "25.50" },
+      ]);
+
+      await expect(
+        database.query(
+          `INSERT INTO "ProductOptionGroup"
+            ("id", "productId", "name", "minSelect", "maxSelect", "updatedAt")
+           VALUES
+            ('invalid-group', 'product-1', 'Geçersiz', 3, 1, CURRENT_TIMESTAMP)`,
+        ),
+      ).rejects.toThrow(/ProductOptionGroup_selection_check/);
+    } finally {
+      await database.close();
+    }
+  });
+});

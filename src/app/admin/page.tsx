@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { ProtectedShell } from "@/components/auth/protected-shell";
 import { PERMISSIONS } from "@/lib/auth/permissions";
 import { requirePagePermission } from "@/lib/auth/server";
@@ -20,9 +21,11 @@ export default async function AdminPage() {
       title="Yönetim paneli"
     >
       <p className="muted">
-        Kimlik ve yetki sistemi etkin. Yönetim özellikleri sonraki
-        aşamalarda eklenecektir.
+        Kimlik ve yetki sistemi etkin. Menü yönetimi kullanıma hazır.
       </p>
+      <Link className="button button-primary" href="/admin/menu">
+        Menü yönetimini aç
+      </Link>
     </ProtectedShell>
   );
 }
