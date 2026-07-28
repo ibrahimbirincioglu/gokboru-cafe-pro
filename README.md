@@ -144,6 +144,22 @@ döner; veritabanında token hash'i ve şifreli kopyası saklanır.
 - Masa kartları boş/dolu/pasif, açık toplam, son sipariş ve mevcutsa ödeme
   talebi durumunu gösterir. Bu aşama ödeme alma veya masa kapatma yapmaz.
 
+## Kasa, ödeme ve masa kapatma
+
+- `/pos`, CASHIER, ADMIN ve OWNER için açık masaları ve tüm sipariş turlarını
+  gösterir; kasiyer aktif katalogdan ürün ve seçenek ekleyebilir.
+- İptal ve masa indirimi yalnızca `ORDERS_ADJUST` yetkili OWNER/ADMIN tarafından,
+  gerekçe ve audit kaydıyla yapılabilir.
+- Nakit ve kredi kartı ödemelerinde istemci tutar göndermez. Sunucu kalem
+  snapshotlarını, iptal miktarlarını ve indirimi Prisma Decimal ile yeniden
+  hesaplar.
+- Ödeme, siparişlerin `TAMAMLANDI` olması, oturumun kapanması ve audit log tek
+  Serializable transaction'dır. Commit sonrası canlı olaylar masayı tüm
+  ekranlarda boş duruma geçirir.
+- Idempotency anahtarı, advisory lock ve oturum başına tamamlanmış ödeme partial
+  unique index'i çift/eşzamanlı ödemeyi engeller.
+- `/pos/receipt/[paymentId]` yetki korumalı, yazdırılabilir fiştir.
+
 ## Doğrulama
 
 ```bash

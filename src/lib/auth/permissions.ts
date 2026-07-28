@@ -9,6 +9,7 @@ export const PERMISSIONS = {
   TABLES_MANAGE: "tables:manage",
   ORDERS_MANAGE: "orders:manage",
   PAYMENTS_TAKE: "payments:take",
+  ORDERS_ADJUST: "orders:adjust",
   REPORTS_VIEW: "reports:view",
   SERVICE_REQUESTS_MANAGE: "service-requests:manage",
 } as const;
@@ -27,6 +28,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     PERMISSIONS.TABLES_MANAGE,
     PERMISSIONS.ORDERS_MANAGE,
     PERMISSIONS.PAYMENTS_TAKE,
+    PERMISSIONS.ORDERS_ADJUST,
     PERMISSIONS.REPORTS_VIEW,
     PERMISSIONS.SERVICE_REQUESTS_MANAGE,
   ],
