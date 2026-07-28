@@ -122,7 +122,27 @@ yazılmaz.
   siparişi alınmaz.
 - UUID idempotency anahtarı ve veritabanı unique index'i çift siparişi engeller.
 - Sipariş sonrası 256-bit güvenli `/order/[publicOrderToken]` takip bağlantısı
-  döner; veritabanında token hash'i ve şifreli kopyası saklanır.
+döner; veritabanında token hash'i ve şifreli kopyası saklanır.
+
+## Canlı sipariş ve masa takibi
+
+- Uygulama `npm run dev` ve `npm start` ile `server.ts` özel Node sunucusunu
+  çalıştırır; `/ws` WebSocket bağlantıları aynı süreçte yönetilir.
+- `/admin/orders` PostgreSQL kaynaklı sipariş ve masa görünümüdür. WebSocket
+  yalnızca değişiklik bildirir; her olaydan sonra REST ile yeniden okunur ve
+  bağlantı kesilirse 10 saniyelik polling devam eder.
+- Admin WebSocket bağlantısı HttpOnly oturum cookie'si, aktif kullanıcı ve
+  `ORDERS_MANAGE` izniyle doğrulanır. Müşteri bağlantısı yalnızca kendi public
+  sipariş tokenıyla kendi sipariş kanalına bağlanabilir.
+- Sunucu 25 saniyede bir ping/pong heartbeat ve periyodik yetki kontrolü yapar.
+  İstemci üstel gecikmeyle tekrar bağlanır ve olay kimliklerini tekrar işlemez.
+- Yeni siparişte görsel uyarı oluşur. Tarayıcı otomatik ses politikasına uygun
+  olarak kullanıcı sesi etkinleştirdikten sonra sesli uyarı da verilir.
+- Siparişler yalnızca `BEKLIYOR → ONAYLANDI → HAZIRLANIYOR → HAZIR →
+  TAMAMLANDI` yönünde ve optimistic version kontrolüyle ilerler. Her geçiş
+  transaction içinde status history ve audit log oluşturur.
+- Masa kartları boş/dolu/pasif, açık toplam, son sipariş ve mevcutsa ödeme
+  talebi durumunu gösterir. Bu aşama ödeme alma veya masa kapatma yapmaz.
 
 ## Doğrulama
 

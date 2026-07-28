@@ -508,6 +508,150 @@ h1 {
   }
 }
 
+.live-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  max-width: 90rem;
+  margin: 0 auto 1rem;
+  color: var(--muted);
+}
+
+.live-connection {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.85rem;
+}
+
+.live-connected {
+  border-color: #3f8963;
+  color: #b8f5ce;
+}
+
+.live-disconnected {
+  border-color: #a54848;
+  color: #ffd9d9;
+}
+
+.live-alert {
+  position: sticky;
+  z-index: 10;
+  top: 1rem;
+  max-width: 90rem;
+  margin: 0 auto 1rem;
+  border: 2px solid var(--accent);
+  border-radius: 0.8rem;
+  padding: 1rem;
+  color: #160d06;
+  background: #f3b77e;
+  box-shadow: 0 1rem 3rem rgb(0 0 0 / 30%);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.live-table-grid,
+.live-order-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1rem;
+}
+
+.live-table-card,
+.live-order-card {
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+  padding: 1rem;
+  background: var(--surface-soft);
+}
+
+.live-table-card h3,
+.live-order-card h3 {
+  margin: 0;
+}
+
+.state-BOS {
+  border-left: 0.4rem solid #688197;
+}
+
+.state-DOLU {
+  border-left: 0.4rem solid var(--accent);
+}
+
+.state-PASIF {
+  opacity: 0.6;
+}
+
+.payment-request {
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  color: #160d06;
+  background: #f3b77e;
+  font-weight: 700;
+}
+
+.live-order-card {
+  display: grid;
+  align-content: start;
+  gap: 0.7rem;
+}
+
+.live-order-card p {
+  margin: 0;
+}
+
+.live-order-item {
+  display: grid;
+  gap: 0.25rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.7rem;
+}
+
+.live-order-item small {
+  color: var(--muted);
+}
+
+.order-status {
+  border-radius: 999px;
+  padding: 0.35rem 0.6rem;
+  background: var(--background);
+  font-size: 0.8rem;
+}
+
+.status-BEKLIYOR {
+  color: #ffd18f;
+}
+
+.status-HAZIR {
+  color: #b8f5ce;
+}
+
+.order-progress {
+  display: grid;
+  gap: 0.5rem;
+  margin: 2rem 0;
+  padding: 0;
+  list-style: none;
+}
+
+.order-progress li {
+  border-left: 0.3rem solid var(--border);
+  padding: 0.65rem 0.8rem;
+  color: var(--muted);
+  background: var(--surface-soft);
+}
+
+.order-progress .is-complete {
+  border-color: var(--accent);
+  color: var(--text);
+  font-weight: 700;
+}
+
 @media (max-width: 520px) {
   .page-shell {
     padding: 1rem;
