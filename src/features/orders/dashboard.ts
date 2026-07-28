@@ -64,10 +64,16 @@ export async function getLiveDashboard(): Promise<LiveDashboardDto> {
     })),
     tables: tables.map((table) => {
       const session = table.tableSessions[0];
-      const openTotal = (session?.orders ?? []).reduce(
+      const grossOpenTotal = (session?.orders ?? []).reduce(
         (total, order) => total.add(order.total),
         new Prisma.Decimal(0),
       );
+      const openTotal = session
+        ? Prisma.Decimal.max(
+            grossOpenTotal.sub(session.discountTotal),
+            new Prisma.Decimal(0),
+          )
+        : grossOpenTotal;
       return {
         id: table.id,
         name: table.name,

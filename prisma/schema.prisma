@@ -82,25 +82,26 @@ enum ServiceRequestStatus {
 }
 
 model User {
-  id                     String               @id @default(cuid())
-  name                   String
-  username               String               @unique
-  email                  String?              @unique
-  passwordHash           String
-  role                   UserRole
-  isActive               Boolean              @default(true)
-  lastLoginAt            DateTime?
-  createdAt              DateTime             @default(now())
-  updatedAt              DateTime             @updatedAt
-  openedTableSessions    TableSession[]       @relation("TableSessionOpenedBy")
-  closedTableSessions    TableSession[]       @relation("TableSessionClosedBy")
-  createdOrders          Order[]              @relation("OrderCreatedBy")
-  receivedPayments       Payment[]            @relation("PaymentReceivedBy")
-  orderStatusChanges     OrderStatusHistory[]
-  handledServiceRequests ServiceRequest[]
-  auditLogs              AuditLog[]
-  updatedSettings        AppSetting[]
-  sessions               UserSession[]
+  id                      String               @id @default(cuid())
+  name                    String
+  username                String               @unique
+  email                   String?              @unique
+  passwordHash            String
+  role                    UserRole
+  isActive                Boolean              @default(true)
+  lastLoginAt             DateTime?
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt
+  openedTableSessions     TableSession[]       @relation("TableSessionOpenedBy")
+  closedTableSessions     TableSession[]       @relation("TableSessionClosedBy")
+  discountedTableSessions TableSession[]       @relation("TableSessionDiscountBy")
+  createdOrders           Order[]              @relation("OrderCreatedBy")
+  receivedPayments        Payment[]            @relation("PaymentReceivedBy")
+  orderStatusChanges      OrderStatusHistory[]
+  handledServiceRequests  ServiceRequest[]
+  auditLogs               AuditLog[]
+  updatedSettings         AppSetting[]
+  sessions                UserSession[]
 
   @@index([role, isActive])
 }
@@ -250,6 +251,9 @@ model TableSession {
   closedAt           DateTime?
   openedByUserId     String?
   closedByUserId     String?
+  discountByUserId   String?
+  discountTotal      Decimal            @default(0) @db.Decimal(12, 2)
+  discountReason     String?
   guestCount         Int?
   note               String?
   businessDate       DateTime           @db.Date
@@ -258,6 +262,7 @@ model TableSession {
   table              Table              @relation(fields: [tableId], references: [id], onDelete: Restrict)
   openedBy           User?              @relation("TableSessionOpenedBy", fields: [openedByUserId], references: [id], onDelete: SetNull)
   closedBy           User?              @relation("TableSessionClosedBy", fields: [closedByUserId], references: [id], onDelete: SetNull)
+  discountBy         User?              @relation("TableSessionDiscountBy", fields: [discountByUserId], references: [id], onDelete: SetNull)
   orders             Order[]
   payments           Payment[]
   serviceRequests    ServiceRequest[]
@@ -365,6 +370,8 @@ model Payment {
   paymentNumber    String        @unique
   tableSessionId   String
   amount           Decimal       @db.Decimal(12, 2)
+  subtotal         Decimal       @db.Decimal(12, 2)
+  discountTotal    Decimal       @default(0) @db.Decimal(12, 2)
   paymentType      PaymentType
   status           PaymentStatus @default(PENDING)
   idempotencyKey   String        @unique

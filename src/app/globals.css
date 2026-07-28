@@ -662,3 +662,78 @@ h1 {
     border-radius: 1rem;
   }
 }
+
+.pos-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(18rem, 1fr);
+  gap: 1.25rem;
+}
+
+.pos-layout section,
+.pos-layout aside {
+  display: grid;
+  align-content: start;
+  gap: 0.8rem;
+}
+
+.pos-layout select,
+.pos-layout input,
+.pos-layout textarea {
+  width: 100%;
+}
+
+.receipt {
+  max-width: 42rem;
+  margin: 2rem auto;
+  padding: 2rem;
+  color: #1c1713;
+  background: #fff;
+}
+
+.receipt header {
+  text-align: center;
+}
+
+.receipt-line {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.25rem;
+  border-bottom: 1px dashed #aaa;
+  padding: 0.5rem 0;
+}
+
+.receipt-line small {
+  grid-column: 1 / -1;
+}
+
+.receipt-totals {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+  font-size: 1.05rem;
+}
+
+.receipt-totals dd {
+  margin: 0;
+  text-align: right;
+}
+
+.receipt-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+@media (max-width: 760px) {
+  .pos-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .receipt-actions {
+    display: none;
+  }
+  .receipt {
+    margin: 0;
+  }
+}
