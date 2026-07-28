@@ -107,6 +107,23 @@ Tokenlar 256-bit rastgele üretilir; veritabanında doğrulama hash'i ve
 hash değiştiği için eski bağlantı hemen geçersiz olur. Ham token audit log'a
 yazılmaz.
 
+## QR müşteri menüsü ve sipariş
+
+- `/menu/t/[qrToken]` aktif masayı doğrular ve yalnızca aktif kategori, ürün ve
+  seçenekleri gösterir.
+- Müşteri hesap açmadan HttpOnly, SameSite guest session cookie'si alır. Oturum
+  masa ve QR sürümüne bağlıdır; QR yenilenirse eski oturum sipariş veremez.
+- Sepet tarayıcıda korunur; ürün/seçenek notları ve adetler sunucuya gönderilir.
+- Ürün, indirim ve seçenek fiyatları istemciden kabul edilmez. PostgreSQL'den
+  yeniden okunup Prisma Decimal ile hesaplanır ve sipariş snapshot alanlarına
+  yazılır.
+- İlk sipariş Serializable transaction içinde masa oturumu açar; sonraki
+  siparişler aynı `OPEN` oturuma eklenir. Ödeme süreci başlamış masaya yeni QR
+  siparişi alınmaz.
+- UUID idempotency anahtarı ve veritabanı unique index'i çift siparişi engeller.
+- Sipariş sonrası 256-bit güvenli `/order/[publicOrderToken]` takip bağlantısı
+  döner; veritabanında token hash'i ve şifreli kopyası saklanır.
+
 ## Doğrulama
 
 ```bash

@@ -293,3 +293,113 @@ describe("phase 4 PostgreSQL migration", () => {
     }
   });
 });
+
+describe("phase 5 PostgreSQL migration", () => {
+  it("adds guest ordering and idempotency without losing table data", async () => {
+    const database = new PGlite();
+    try {
+      for (const migration of [
+        "20260728154000_init",
+        "20260728161000_phase_1_data_model",
+        "20260728174500_phase_2_auth_authorization",
+        "20260728183500_phase_3_menu_management",
+        "20260728193000_phase_4_table_qr_management",
+      ]) {
+        await database.exec(readMigration(migration));
+      }
+      await database.query(
+        `INSERT INTO "Table" ("id", "number", "name", "sortOrder", "updatedAt")
+         VALUES ('table-1', 1, 'Masa 1', 1, CURRENT_TIMESTAMP)`,
+      );
+      await database.exec(
+        readMigration("20260728201500_phase_5_qr_order_flow"),
+      );
+      const tables = await database.query<{ name: string }>(
+        `SELECT "name" FROM "Table" WHERE "id" = 'table-1'`,
+      );
+      expect(tables.rows).toEqual([{ name: "Masa 1" }]);
+      await database.query(
+        `INSERT INTO "GuestSession"
+          ("id", "tableId", "tokenHash", "qrTokenVersion", "expiresAt")
+         VALUES
+          ('guest-1', 'table-1', 'guest-hash', 1, CURRENT_TIMESTAMP + INTERVAL '12 hours')`,
+      );
+      await expect(
+        database.query(
+          `INSERT INTO "GuestSession"
+            ("id", "tableId", "tokenHash", "qrTokenVersion", "expiresAt")
+           VALUES
+            ('guest-2', 'table-1', 'guest-hash', 1, CURRENT_TIMESTAMP + INTERVAL '12 hours')`,
+        ),
+      ).rejects.toThrow(/GuestSession_tokenHash_key/);
+      const columns = await database.query<{ column_name: string }>(
+        `SELECT column_name FROM information_schema.columns
+         WHERE table_name = 'Order'
+           AND column_name IN ('guestSessionId', 'idempotencyKey', 'publicTokenHash', 'publicTokenEncrypted')`,
+      );
+      expect(columns.rows.map((row) => row.column_name)).toEqual(
+        expect.arrayContaining([
+          "guestSessionId",
+          "idempotencyKey",
+          "publicTokenHash",
+          "publicTokenEncrypted",
+        ]),
+      );
+      await database.query(
+        `INSERT INTO "TableSession"
+          ("id", "tableId", "businessDate", "updatedAt")
+         VALUES ('session-1', 'table-1', DATE '2026-07-28', CURRENT_TIMESTAMP)`,
+      );
+      await database.query(
+        `INSERT INTO "Order"
+          ("id", "orderNumber", "tableSessionId", "tableId", "guestSessionId",
+           "idempotencyKey", "publicTokenHash", "status", "source",
+           "subtotal", "total", "updatedAt")
+         VALUES
+          ('order-1', 'QR-1', 'session-1', 'table-1', 'guest-1',
+           'idem-1', 'public-hash-1', 'BEKLIYOR', 'QR',
+           100.00, 100.00, CURRENT_TIMESTAMP)`,
+      );
+      await expect(
+        database.query(
+          `INSERT INTO "Order"
+            ("id", "orderNumber", "tableSessionId", "tableId", "guestSessionId",
+             "idempotencyKey", "publicTokenHash", "status", "source",
+             "subtotal", "total", "updatedAt")
+           VALUES
+            ('order-2', 'QR-2', 'session-1', 'table-1', 'guest-1',
+             'idem-1', 'public-hash-2', 'BEKLIYOR', 'QR',
+             100.00, 100.00, CURRENT_TIMESTAMP)`,
+        ),
+      ).rejects.toThrow(/Order_idempotencyKey_key/);
+      const orders = await database.query<{ count: string }>(
+        `SELECT COUNT(*)::text AS "count" FROM "Order"
+         WHERE "idempotencyKey" = 'idem-1'`,
+      );
+      expect(orders.rows).toEqual([{ count: "1" }]);
+      try {
+        await database.exec(
+          `BEGIN;
+           INSERT INTO "AuditLog" ("id", "action", "entityType")
+           VALUES ('rolled-back-audit', 'GUEST_ORDER_CREATED', 'Order');
+           INSERT INTO "OrderItem"
+             ("id", "orderId", "productNameSnapshot", "unitPriceSnapshot",
+              "quantity", "lineSubtotal", "prepStation", "updatedAt")
+           VALUES
+             ('invalid-item', 'missing-order', 'Ürün', 10.00, 1, 10.00,
+              'MUTFAK', CURRENT_TIMESTAMP);
+           COMMIT;`,
+        );
+      } catch {
+        await database.exec("ROLLBACK");
+      }
+      const rolledBackAudit = await database.query<{ count: string }>(
+        `SELECT COUNT(*)::text AS "count" FROM "AuditLog"
+         WHERE "id" = 'rolled-back-audit'`,
+      );
+      expect(rolledBackAudit.rows).toEqual([{ count: "0" }]);
+    } finally {
+      await database.close();
+    }
+  });
+});
