@@ -30,6 +30,9 @@ export default async function AdminPage() {
         <Link className="button button-secondary" href="/admin/tables">
           Masa ve QR yönetimini aç
         </Link>
+        <Link className="button button-primary" href="/admin/orders">
+          Canlı siparişleri aç
+        </Link>
       </div>
     </ProtectedShell>
   );

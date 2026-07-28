@@ -5,6 +5,7 @@ import { OrderSource, Prisma, TableSessionStatus } from "@prisma/client";
 import { createStoredQrToken, decryptQrToken } from "@/features/qr/crypto";
 import { getQrSecret } from "@/features/qr/server";
 import { getPrisma } from "@/lib/db/prisma";
+import { publishOrderEvent } from "@/lib/realtime/events";
 import { priceOrder, type CatalogProduct } from "./pricing";
 import { businessDateForIstanbul } from "./time";
 import type { CreateOrderInput } from "./validation";
@@ -38,7 +39,7 @@ export async function createGuestOrder(input: {
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
-      return await prisma.$transaction(
+      const result = await prisma.$transaction(
         async (tx) => {
           await tx.$executeRaw(
             Prisma.sql`SELECT pg_advisory_xact_lock(hashtext(${input.tableId}))`,
@@ -182,6 +183,10 @@ export async function createGuestOrder(input: {
         },
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
       );
+      if (!result.duplicate) {
+        publishOrderEvent("ORDER_CREATED", result.id);
+      }
+      return result;
     } catch (error) {
       const retryable =
         error instanceof Prisma.PrismaClientKnownRequestError &&
