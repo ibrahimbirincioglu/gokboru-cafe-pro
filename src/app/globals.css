@@ -144,15 +144,40 @@ h1 {
 
 .login-form input {
   margin-bottom: 0.5rem;
-  color: var(--muted);
+  color: var(--text);
   background: var(--surface-soft);
 }
 
 .login-form button {
   margin-top: 0.5rem;
-  color: var(--muted);
-  background: #1d2a38;
-  cursor: not-allowed;
+  color: #160d06;
+  background: var(--accent);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.login-form button:hover {
+  background: var(--accent-hover);
+}
+
+.form-error {
+  margin: 1.25rem 0 0;
+  border: 1px solid #a54848;
+  border-radius: 0.75rem;
+  padding: 0.85rem 1rem;
+  color: #ffd9d9;
+  background: rgb(117 27 27 / 35%);
+}
+
+.protected-content {
+  margin: 1.5rem 0;
+}
+
+.button-secondary {
+  border: 1px solid var(--border);
+  color: var(--text);
+  background: var(--surface-soft);
+  cursor: pointer;
 }
 
 @media (max-width: 520px) {

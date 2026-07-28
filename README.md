@@ -54,6 +54,12 @@ npm run prisma:seed
 Seed işlemi `Masa 1` ile `Masa 20` arasındaki kayıtları `number` alanına göre
 upsert eder; mevcut diğer verileri silmez.
 
+Geliştirme ortamında `DEV_SEED_PASSWORD_HASH` geçerli bir Argon2id hash
+olarak ayarlanırsa seed ayrıca `owner`, `admin`, `cashier` ve `waiter`
+kullanıcılarını oluşturur. Kaynak koda veya `.env.example` dosyasına düz
+metin parola yazmayın. Bu geliştirme kullanıcıları production ortamında
+oluşturulmaz.
+
 ## Geliştirme
 
 ```bash
@@ -62,6 +68,21 @@ npm run dev
 
 - Ana sayfa: `http://localhost:3000`
 - Admin giriş iskeleti: `http://localhost:3000/admin/login`
+
+## Kimlik ve yetki
+
+- `/admin`: OWNER ve ADMIN
+- `/pos`: OWNER, ADMIN ve CASHIER
+- `/waiter`: OWNER, ADMIN ve WAITER
+- `/api/admin/session`: yalnızca admin erişim izni olan roller
+
+Oturum tokenı yalnızca HttpOnly cookie'de taşınır ve veritabanında SHA-256
+hash olarak saklanır. Oturumların 8 saat mutlak, 30 dakika hareketsizlik
+süresi vardır. Başarısız girişler kullanıcı ve IP için HMAC'lenmiş
+tanımlayıcılarla 15 dakikalık pencerede sınırlandırılır.
+
+Reverse proxy, istemcinin dışarıdan gönderdiği `X-Forwarded-For` başlığını
+temizleyip güvenilir istemci IP'siyle yeniden yazmalıdır.
 
 ## Doğrulama
 
