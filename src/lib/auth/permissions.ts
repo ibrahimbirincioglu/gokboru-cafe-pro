@@ -11,6 +11,7 @@ export const PERMISSIONS = {
   PAYMENTS_TAKE: "payments:take",
   ORDERS_ADJUST: "orders:adjust",
   REPORTS_VIEW: "reports:view",
+  SITE_MANAGE: "site:manage",
   SERVICE_REQUESTS_MANAGE: "service-requests:manage",
 } as const;
 
@@ -30,6 +31,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     PERMISSIONS.PAYMENTS_TAKE,
     PERMISSIONS.ORDERS_ADJUST,
     PERMISSIONS.REPORTS_VIEW,
+    PERMISSIONS.SITE_MANAGE,
     PERMISSIONS.SERVICE_REQUESTS_MANAGE,
   ],
   [UserRole.CASHIER]: [

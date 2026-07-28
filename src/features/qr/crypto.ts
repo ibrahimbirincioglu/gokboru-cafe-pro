@@ -36,7 +36,10 @@ export function encryptQrToken(token: string, secret: string) {
 
 export function decryptQrToken(payload: string, secret: string) {
   const packed = Buffer.from(payload, "base64url");
-  if (packed.length <= IV_BYTES + 16) {
+  if (
+    packed.length <= IV_BYTES + 16 ||
+    packed.toString("base64url") !== payload
+  ) {
     throw new Error("Geçersiz QR token kaydı.");
   }
   const iv = packed.subarray(0, IV_BYTES);

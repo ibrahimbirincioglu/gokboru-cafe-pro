@@ -31,7 +31,8 @@ describe("QR token security", () => {
 
   it("rejects ciphertext tampering and a different encryption secret", () => {
     const qr = createStoredQrToken(secret);
-    const tampered = `${qr.encrypted.slice(0, -1)}A`;
+    const replacement = qr.encrypted.endsWith("A") ? "B" : "A";
+    const tampered = `${qr.encrypted.slice(0, -1)}${replacement}`;
     expect(() => decryptQrToken(tampered, secret)).toThrow();
     expect(() =>
       decryptQrToken(
