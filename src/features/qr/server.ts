@@ -34,6 +34,11 @@ export async function resolveActiveTableByQrToken(rawToken: string) {
       qrTokenHash: hashQrToken(token.data),
       isActive: true,
     },
-    select: { id: true, number: true, name: true },
+    select: {
+      id: true,
+      number: true,
+      name: true,
+      qrTokenVersion: true,
+    },
   });
 }
