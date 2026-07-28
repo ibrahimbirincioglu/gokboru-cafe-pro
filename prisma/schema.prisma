@@ -306,8 +306,10 @@ model Order {
   statusHistory        OrderStatusHistory[]
 
   @@index([tableSessionId, status])
+  @@index([tableSessionId, createdAt])
   @@index([tableId, createdAt])
   @@index([status, createdAt])
+  @@index([createdAt, status, tableId, createdByUserId])
   @@index([guestSessionId, createdAt])
 }
 
@@ -332,6 +334,7 @@ model OrderItem {
 
   @@index([orderId, status])
   @@index([productId])
+  @@index([productId, orderId])
   @@index([prepStation, status])
 }
 
@@ -387,6 +390,7 @@ model Payment {
 
   @@index([tableSessionId, status])
   @@index([businessDate, status])
+  @@index([businessDate, status, paymentType])
   @@index([paymentType, paidAt])
 }
 

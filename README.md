@@ -160,6 +160,20 @@ döner; veritabanında token hash'i ve şifreli kopyası saklanır.
   unique index'i çift/eşzamanlı ödemeyi engeller.
 - `/pos/receipt/[paymentId]` yetki korumalı, yazdırılabilir fiştir.
 
+## Ciro, raporlar ve sipariş geçmişi
+
+- `/admin/reports` yalnızca `REPORTS_VIEW` yetkili OWNER/ADMIN kullanıcılarına
+  günlük, haftalık, aylık ve en fazla 366 günlük özel aralık sunar.
+- Net ciro, nakit, kart, indirim, iptal, iade, sipariş ve ortalama masa hesabı
+  tamamlanmış ödemelerin `businessDate` alanından hesaplanır. Kayıtlar gece
+  silinmez veya sıfırlanmaz.
+- Yoğun saatler ve sipariş tarih/saatleri UTC kayıtlardan `Europe/Istanbul`
+  saat dilimine çevrilir.
+- Sipariş geçmişi tarih, saat, masa, ürün, durum, ödeme tipi ve çalışanla
+  filtrelenebilir; ayrıntılar snapshot ürün adı/fiyatı ve iptal gerekçesini korur.
+- Aynı filtrelerle UTF-8 CSV dışa aktarımı yapılır; hücreler CSV ve spreadsheet
+  formula injection'a karşı güvenli hale getirilir.
+
 ## Doğrulama
 
 ```bash
