@@ -237,3 +237,59 @@ describe("phase 3 PostgreSQL migration", () => {
     }
   });
 });
+
+describe("phase 4 PostgreSQL migration", () => {
+  it("adds revocable QR metadata without changing existing tables", async () => {
+    const database = new PGlite();
+    try {
+      await database.exec(readMigration("20260728154000_init"));
+      await database.exec(readMigration("20260728161000_phase_1_data_model"));
+      await database.exec(readMigration("20260728174500_phase_2_auth_authorization"));
+      await database.exec(readMigration("20260728183500_phase_3_menu_management"));
+      await database.query(
+        `INSERT INTO "Table" ("id", "number", "name", "sortOrder", "updatedAt")
+         VALUES ('existing-table', 1, 'Masa 1', 1, CURRENT_TIMESTAMP)`,
+      );
+      await database.exec(
+        readMigration("20260728193000_phase_4_table_qr_management"),
+      );
+      const tables = await database.query<{
+        id: string;
+        qrTokenVersion: number;
+      }>(`SELECT "id", "qrTokenVersion" FROM "Table"`);
+      expect(tables.rows).toEqual([
+        { id: "existing-table", qrTokenVersion: 0 },
+      ]);
+      await database.query(
+        `UPDATE "Table"
+         SET "qrTokenHash" = 'unique-hash',
+             "qrTokenEncrypted" = 'ciphertext',
+             "qrTokenVersion" = 1,
+             "qrRotatedAt" = CURRENT_TIMESTAMP
+         WHERE "id" = 'existing-table'`,
+      );
+      await database.query(
+        `UPDATE "Table"
+         SET "qrTokenHash" = 'rotated-hash', "qrTokenVersion" = 2
+         WHERE "id" = 'existing-table'`,
+      );
+      const oldTokens = await database.query<{ count: string }>(
+        `SELECT COUNT(*)::text AS "count" FROM "Table"
+         WHERE "qrTokenHash" = 'unique-hash'`,
+      );
+      expect(oldTokens.rows).toEqual([{ count: "0" }]);
+      await database.query(
+        `INSERT INTO "Table" ("id", "number", "name", "sortOrder", "qrTokenHash", "updatedAt")
+         VALUES ('second-table', 2, 'Masa 2', 2, 'second-hash', CURRENT_TIMESTAMP)`,
+      );
+      await expect(
+        database.query(
+          `UPDATE "Table" SET "qrTokenHash" = 'rotated-hash'
+           WHERE "id" = 'second-table'`,
+        ),
+      ).rejects.toThrow(/Table_qrTokenHash_key/);
+    } finally {
+      await database.close();
+    }
+  });
+});

@@ -207,15 +207,19 @@ model ProductOption {
 }
 
 model Table {
-  id            String         @id @default(cuid())
-  number        Int            @unique
-  name          String
-  isActive      Boolean        @default(true)
-  sortOrder     Int
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  tableSessions TableSession[]
-  orders        Order[]
+  id               String         @id @default(cuid())
+  number           Int            @unique
+  name             String
+  isActive         Boolean        @default(true)
+  sortOrder        Int
+  qrTokenHash      String?        @unique
+  qrTokenEncrypted String?
+  qrTokenVersion   Int            @default(0)
+  qrRotatedAt      DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  tableSessions    TableSession[]
+  orders           Order[]
 
   @@index([isActive, sortOrder])
 }

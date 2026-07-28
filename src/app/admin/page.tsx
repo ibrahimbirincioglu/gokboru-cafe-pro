@@ -23,9 +23,14 @@ export default async function AdminPage() {
       <p className="muted">
         Kimlik ve yetki sistemi etkin. Menü yönetimi kullanıma hazır.
       </p>
-      <Link className="button button-primary" href="/admin/menu">
-        Menü yönetimini aç
-      </Link>
+      <div className="management-actions">
+        <Link className="button button-primary" href="/admin/menu">
+          Menü yönetimini aç
+        </Link>
+        <Link className="button button-secondary" href="/admin/tables">
+          Masa ve QR yönetimini aç
+        </Link>
+      </div>
     </ProtectedShell>
   );
 }

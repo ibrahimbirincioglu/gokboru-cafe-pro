@@ -5,6 +5,7 @@ import {
   buildInitialSettings,
   buildInitialTables,
 } from "./seed-data";
+import { createStoredQrToken } from "../src/features/qr/crypto";
 
 async function main() {
   const connectionString = process.env.DATABASE_URL;
@@ -15,18 +16,37 @@ async function main() {
 
   const adapter = new PrismaPg({ connectionString });
   const prisma = new PrismaClient({ adapter });
+  const qrSecret = process.env.QR_TOKEN_SECRET;
+
+  if (!qrSecret || qrSecret.length < 32) {
+    throw new Error("QR_TOKEN_SECRET en az 32 karakter olmalıdır.");
+  }
 
   try {
     for (const table of buildInitialTables()) {
-      await prisma.table.upsert({
+      const storedQr = createStoredQrToken(qrSecret);
+      const savedTable = await prisma.table.upsert({
         where: { number: table.number },
-        update: {
-          name: table.name,
-          sortOrder: table.sortOrder,
-          isActive: table.isActive,
+        update: {},
+        create: {
+          ...table,
+          qrTokenHash: storedQr.hash,
+          qrTokenEncrypted: storedQr.encrypted,
+          qrTokenVersion: 1,
+          qrRotatedAt: new Date(),
         },
-        create: table,
       });
+      if (!savedTable.qrTokenHash || !savedTable.qrTokenEncrypted) {
+        await prisma.table.update({
+          where: { id: savedTable.id },
+          data: {
+            qrTokenHash: storedQr.hash,
+            qrTokenEncrypted: storedQr.encrypted,
+            qrTokenVersion: { increment: 1 },
+            qrRotatedAt: new Date(),
+          },
+        });
+      }
     }
 
     for (const setting of buildInitialSettings()) {
