@@ -10,3 +10,14 @@ export function buildInitialTables() {
     };
   });
 }
+
+export function buildInitialSettings() {
+  return [
+    { key: "businessTimezone", valueJson: "Europe/Istanbul" },
+    { key: "businessDayCutoff", valueJson: "00:00" },
+    { key: "currency", valueJson: "TRY" },
+    { key: "defaultLocale", valueJson: "tr-TR" },
+    { key: "orderAutoAccept", valueJson: false },
+    { key: "serviceChargeEnabled", valueJson: false },
+  ];
+}

@@ -1,6 +1,6 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
-import { buildInitialTables } from "./seed-data";
+import { buildInitialSettings, buildInitialTables } from "./seed-data";
 
 async function main() {
   const connectionString = process.env.DATABASE_URL;
@@ -25,7 +25,15 @@ async function main() {
       });
     }
 
-    console.info("20 başlangıç masası hazır.");
+    for (const setting of buildInitialSettings()) {
+      await prisma.appSetting.upsert({
+        where: { key: setting.key },
+        update: {},
+        create: setting,
+      });
+    }
+
+    console.info("20 başlangıç masası ve varsayılan ayarlar hazır.");
   } finally {
     await prisma.$disconnect();
   }
